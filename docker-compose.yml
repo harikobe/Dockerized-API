@@ -1,0 +1,47 @@
+version: "3.12"
+
+services: #3 services
+          # db -> database
+          #pgadmin-> pgadmin (GUI for postgres)
+          # app -> main applcation
+
+#--------------------------------------------------------------
+#first service:
+    db:
+      container_name: postgresql_db #setting container_name
+      image: postgres #setting the image
+      restart: always #image need to restart if it is stopped 
+      ports:
+        - 5432:5432
+      environment: #set up the needed env tables
+        - POSTGRES_USER=${DB_USER}
+        - POSTGRES_PASSWORD=${DB_PASSWORD}
+        - POSTGRES_DB=${DB_NAME}
+
+#-----------------------------------------------------------------------------
+#second service:
+    pgadmin:
+      container_name: pgadmin #setting container_name
+      image: dpage/pgadmin4 #setting the image
+      environment: #set up the needed env tables
+        - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+        - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+      ports:
+        - 5050:80 #80 -> containers port(http or internet port)
+      depends_on:
+        - db
+
+#------------------------------------------------------------------------------
+#third services:
+    app:
+        container_name: app
+        build: .         #selecting the whole directory to find the dockerfile
+        command: bash -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+        volumes:
+          - .:/app #add the everything in the dir to "app"
+        ports:
+          - "8000:8000"
+        depends_on:
+          - db
+        restart: always
+     
